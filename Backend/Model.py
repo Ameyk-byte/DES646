@@ -11,7 +11,8 @@ co = Client(api_key=CohereAPIKey)
 # Updated list of functions
 funcs = [
     "exit", "general", "realtime", "open", "close", "play", "generate image",
-    "system", "content", "google search", "youtube search", "reminder", "iot"
+    "system", "content", "google search", "youtube search", "reminder", "iot",
+    "LearningRecommender" 
 ]
 
 message = []
@@ -108,4 +109,5 @@ def FirstLayerDMM(prompt: str = "test"):
 
 if __name__ == "__main__":
     while True:
+
         print(FirstLayerDMM(input(">>>")))
