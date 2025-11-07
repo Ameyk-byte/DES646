@@ -47,3 +47,13 @@ Personalized Learning Recommender.
 git clone https://github.com/Ameyk-byte/DES646.git
 cd DES646
 
+### Hotkey Activation
+After launching Neuro:
+
+- Press **SHIFT + SPACE**  
+- Speak: "Neuro recommend resources for python"
+
+No wake word required, no clicking buttons.
+
+
+
