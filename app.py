@@ -6,37 +6,39 @@ from Backend.SpeechToText import SpeechRecognition
 from Backend.Chatbot import ChatBot
 from Backend.TextToSpeech import TextToSpeech
 from Backend.IoT import iot
+from Backend.ImageGenration import GenerateImage
+from Backend.Learning import run as LearningRecommender  # ✅ NEW IMPORT
 from dotenv import dotenv_values
 from asyncio import run
-from Backend.ImageGenration import GenerateImage
-import eel  # Import eel
+import eel  # GUI Framework
 
 # Load environment variables
 env_vars = dotenv_values(".env")
-Username = env_vars.get("Username", "User")  # Default to "User" if not specified
-Assistantname = env_vars.get("Assistantname", "Assistant")  # Default to "Assistant" if not specified
+Username = env_vars.get("Username", "User")
+Assistantname = env_vars.get("Assistantname", "Assistant")
 
 # Initialize eel
-eel.init("web")  # Initialize eel with the 'web' folder containing index.html
+eel.init("web")
 
-# Function to display text on the screen using eel
+# Display text on GUI and console
 @eel.expose
 def ShowTextToScreen(text):
-    """Display text on the screen."""
     print(text)
-    eel.updateScreenText(text)  # Call the JavaScript function to update the screen text
+    eel.updateScreenText(text)
 
-# List of supported functions
-Functions = ['open', 'close', 'play', "system", "content", "google search", "youtube search", "iot"]
+# Supported functions (Automation / IoT / Media etc)
+Functions = [
+    'open', 'close', 'play', "system", "content",
+    "google search", "youtube search", "iot",
+    "LearningRecommender"   # ✅ ADDED
+]
 
 @eel.expose
 def SetAssistantStatus(status):
-    """Set the assistant's status (replace with GUI logic if needed)."""
     print(f"Assistant Status: {status}")
-    eel.updateStatus(status)  # Call the JavaScript function to update the status
+    eel.updateStatus(status)
 
 def QueryModifier(query):
-    """Modify the query for better processing."""
     return query.strip()
 
 @eel.expose
@@ -45,148 +47,117 @@ def MainExecution():
     ImageExecution = False
     ImageGenerationQuery = ""
 
-    # Perform speech recognition
-    Text = SpeechRecognition()
-    print(f"Recognized Text: {Text}")  # Debugging line
+    Text = SpeechRecognition()  # Speech → text
+    print(f"Recognized Text: {Text}")
 
-    # Initialize Query with a default value
     Query = ""
-    
-    # Check if "hello" is in the recognized text
-    if Text and "neuro" in Text.lower():
+
+    if Text and "neuro" in Text.lower():  # Wake word
         Query = Text.lower().replace("neuro", "").strip()
         ShowTextToScreen(f"{Username} : {Query}")
         SetAssistantStatus("Thinking...")
 
         try:
-            # Pass the query (without "hello") to the Decision-Making Model
             Decision = FirstLayerDMM(Query)
             print(f"Decision: {Decision}")
 
-            # Check for general and realtime queries
+            # general & realtime detection
             G = any(i.startswith("general") for i in Decision)
             R = any(i.startswith("realtime") for i in Decision)
+
             MergedQuery = " and ".join(
-                [" ".join(i.split()[1:]) for i in Decision if i.startswith("general") or i.startswith("realtime")]
+                [" ".join(i.split()[1:]) for i in Decision if (i.startswith("general") or i.startswith("realtime"))]
             )
 
-            # Handle image generation queries
-            for query in Decision:
-                if query.startswith("generate image"):
-                    ImageGenerationQuery = query.replace("generate image ", "")
+            # ✅ ✅ ✅ LEARNING RECOMMENDER
+            for d in Decision:
+                if d.startswith("LearningRecommender"):
+                    SetAssistantStatus("Preparing learning recommendations...")
+
+                    text, payload = LearningRecommender(Query)
+
+                    ScreenFeedback = f"{Assistantname}: {text}"
+                    SpokenFeedback = "Here are some learning resources I recommend."
+
+                    ShowTextToScreen(ScreenFeedback)
+                    TextToSpeech(SpokenFeedback)
+
+                    # Optionally print recommendations in console
+                    if payload and "recommendations" in payload:
+                        for r in payload["recommendations"]:
+                            print(f"- {r['title']} ({r['type']})")
+
+                    SetAssistantStatus("Answering...")
+                    return True
+
+            # ✅ IMAGE GENERATION
+            for d in Decision:
+                if d.startswith("generate image"):
+                    ImageGenerationQuery = d.replace("generate image ", "")
                     ImageExecution = True
 
-            # Handle automation tasks
-            for query in Decision:
-                if not TaskExecution:
-                    if any(query.startswith(func) for func in Functions):
-                        # Attempt to execute the automation task
-                        run(Automation(Decision))
-                        TaskExecution = True
-                        ScreenFeedback = f"{Assistantname}: The app has been opened successfully. Please check it out!"
-                        SpokenFeedback = "The app has been opened successfully. Please check it out!"
-                        ShowTextToScreen(ScreenFeedback)
-                        TextToSpeech(SpokenFeedback)
-
-            # Start image generation process if required
             if ImageExecution:
                 try:
-                    GenerateImage(ImageGenerationQuery)  # Call the GenerateImage function
-                    print("ImageGeneration.py started.")
-                    ScreenFeedback = f"{Assistantname}: The image has been generated successfully. Please check it on the screen!"
-                    SpokenFeedback = "The image has been generated successfully. Please check it on the screen!"
+                    GenerateImage(ImageGenerationQuery)
+                    ScreenFeedback = f"{Assistantname}: Image generated successfully!"
                     ShowTextToScreen(ScreenFeedback)
-                    TextToSpeech(SpokenFeedback)
+                    TextToSpeech("The image has been generated.")
                 except Exception as e:
-                    print(f"Error starting ImageGeneration.py: {e}")
-                    ScreenFeedback = f"{Assistantname}: Sorry, I encountered an issue while generating the image. Please try again later."
-                    SpokenFeedback = "Sorry, I encountered an issue while generating the image. Please try again later."
-                    ShowTextToScreen(ScreenFeedback)
-                    TextToSpeech(SpokenFeedback)
+                    ShowTextToScreen(f"{Assistantname}: Error generating image.")
+                    TextToSpeech("Sorry, an error occurred.")
 
-            # Handle general and realtime queries
-            if G and R or R:
+            # ✅ AUTOMATION (OPEN / CLOSE / PLAY / SYSTEM / etc)
+            for d in Decision:
+                if not TaskExecution and any(d.startswith(func) for func in Functions) and not d.startswith("LearningRecommender"):
+                    run(Automation(Decision))
+                    TaskExecution = True
+                    ShowTextToScreen(f"{Assistantname}: Task executed successfully.")
+                    TextToSpeech("Task executed successfully.")
+                    return True
+
+            # ✅ REALTIME SEARCH
+            if R:
                 SetAssistantStatus("Searching...")
                 Answer = RealtimeSearchEngine(QueryModifier(MergedQuery))
-                ScreenFeedback = f"{Assistantname}: {Answer}"
-                SpokenFeedback = Answer
-                ShowTextToScreen(ScreenFeedback)
-                SetAssistantStatus("Answering...")
-                TextToSpeech(SpokenFeedback)
+                ShowTextToScreen(f"{Assistantname}: {Answer}")
+                TextToSpeech(Answer)
                 return True
 
-            else:
-                for query in Decision:
-                    if query.startswith("general"):
-                        SetAssistantStatus("Thinking...")
-                        QueryFinal = Query.replace("general ", "")
-                        Answer = ChatBot(QueryModifier(QueryFinal))
-                        ScreenFeedback = f"{Assistantname}: {Answer}"
-                        SpokenFeedback = Answer
-                        ShowTextToScreen(ScreenFeedback)
-                        SetAssistantStatus("Answering...")
-                        TextToSpeech(SpokenFeedback)
-                        return True
-
-                    elif query.startswith("realtime"):
-                        SetAssistantStatus("Searching...")
-                        QueryFinal = Query.replace("realtime ", "")
-                        Answer = RealtimeSearchEngine(QueryModifier(QueryFinal))
-                        ScreenFeedback = f"{Assistantname}: {Answer}"
-                        SpokenFeedback = Answer
-                        ShowTextToScreen(ScreenFeedback)
-                        SetAssistantStatus("Answering...")
-                        TextToSpeech(SpokenFeedback)
-                        return True
-
-                    elif query.startswith("exit"):
-                        QueryFinal = "Okay, Bye!"
-                        Answer = ChatBot(QueryModifier(QueryFinal))
-                        ScreenFeedback = f"{Assistantname}: {Answer}"
-                        SpokenFeedback = Answer
-                        ShowTextToScreen(ScreenFeedback)
-                        SetAssistantStatus("Answering...")
-                        TextToSpeech(SpokenFeedback)
-                        SetAssistantStatus("Exiting...")
-                        os._exit(1)
-
-                    elif query.startswith("iot"):
-                        SetAssistantStatus("switching...")
-
-                        # Extract the query after "iot " and clean it
-                        QueryFinal = query.replace("iot ", "").strip()  # Remove "iot " prefix and strip whitespace
-                        print(f"Cleaned Query for IoT: {QueryFinal}")  # Debug log
-
-                        # Pass the cleaned query to the iot function
-                        Answer = iot(QueryFinal)
-
-                        # Prepare feedback for the user
-                        ScreenFeedback = f"{Assistantname}: {Answer}"
-                        SpokenFeedback = Answer
-
-                        # Display and speak the feedback
-                        ShowTextToScreen(ScreenFeedback)
-                        SetAssistantStatus("Answering...")
-                        TextToSpeech(SpokenFeedback)
-
+            # ✅ GENERAL CHATBOT
+            if G:
+                SetAssistantStatus("Thinking...")
+                Answer = ChatBot(QueryModifier(Query))
+                ShowTextToScreen(f"{Assistantname}: {Answer}")
+                TextToSpeech(Answer)
                 return True
+
+            # ✅ EXIT
+            for d in Decision:
+                if d.startswith("exit"):
+                    TextToSpeech("Okay, goodbye.")
+                    os._exit(1)
+
+            # ✅ IOT
+            for d in Decision:
+                if d.startswith("iot"):
+                    SetAssistantStatus("Switching devices...")
+                    cmd = d.replace("iot ", "")
+                    Answer = iot(cmd)
+                    ShowTextToScreen(f"{Assistantname}: {Answer}")
+                    TextToSpeech(Answer)
+                    return True
 
         except Exception as e:
-            print(f"Error during execution: {e}")
-            ScreenFeedback = f"{Assistantname}: An error occurred while processing your request. Please try again."
-            SpokenFeedback = "An error occurred while processing your request. Please try again."
-            ShowTextToScreen(ScreenFeedback)
-            TextToSpeech(SpokenFeedback)
+            print("Error:", e)
+            ShowTextToScreen(f"{Assistantname}: Something went wrong.")
+            TextToSpeech("Sorry, something went wrong.")
 
     else:
-        # If "hello" is not detected, skip the response and wait for the next input
-        print("Skipping response: 'hello' not detected in input.")
+        print("Skipping: 'neuro' not detected")
         return
 
 if __name__ == "__main__":
-    # Start the eel app
-    eel.start("index.html", size=(1024, 768), mode="chrome")  # Open index.html in Chrome
+    eel.start("index.html", size=(1024, 768), mode="chrome")
 
-    # Start the main execution loop
     while True:
         MainExecution()
