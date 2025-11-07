@@ -1,7 +1,7 @@
 # Nuero Personal Assistant (Personalized Learning Recommender)
 
 ## Overview
-This project is a **Personal Assistant** using **Python 3.10**. The assistant is designed to Personalize Learning. It also integrates multiple models and automation scripts to provide accurate responses, real-time data retrieval, task automation, image generation, and IoT control.
+This project is a **Personal Assistant** developed by group **Synapse** using **Python 3.10**. The assistant is designed to Personalize Learning. It also integrates multiple models and automation scripts to provide accurate responses, real-time data retrieval, task automation, image generation, and IoT control.
 
 ## Installation
 ### Prerequisites
@@ -67,6 +67,7 @@ python main.py
 - **Task Automation**: Opens, closes applications, and controls system settings.
 - **AI Image Generation**: Generates images based on text input.
 - **IoT Device Management**: Controls IoT devices.
+
 
 
 
