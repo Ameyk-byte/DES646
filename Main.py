@@ -6,7 +6,7 @@ from Backend.Chatbot import ChatBot
 from Backend.TextToSpeech import TextToSpeech
 from Backend.IoT import iot
 from Backend.ImageGenration import GenerateImage
-from Backend.Learning import run as LearningRecommender  # ✅ NEW
+from Backend.Learning import run as LearningRecommender
 from dotenv import dotenv_values
 from asyncio import run
 import os
@@ -22,7 +22,7 @@ def ShowTextToScreen(text):
 
 # Add LearningRecommender in supported functions
 Functions = ['open', 'close', 'play', "system", "content",
-             "google search", "youtube search", "iot", "LearningRecommender"]  # ✅ UPDATED
+             "google search", "youtube search", "iot", "LearningRecommender"]
 
 def SetAssistantStatus(status):
     print(f"Assistant Status: {status}")
@@ -64,7 +64,7 @@ def MainExecution():
                     ImageGenerationQuery = d.replace("generate image ", "")
                     ImageExecution = True
 
-            # ✅ Detect LearningRecommender intent
+            # Detect LearningRecommender intent
             for d in Decision:
                 if d.startswith("LearningRecommender"):
                     topic = d.replace("LearningRecommender", "").strip()
@@ -163,3 +163,4 @@ def MainExecution():
 if __name__ == "__main__":
     while True:
         MainExecution()
+
