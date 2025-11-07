@@ -12,7 +12,7 @@ Personalized Learning Recommender.
 
 ---
 
-## ✅ Features
+## Features
 
 | Capability | Description |
 |------------|-------------|
@@ -28,7 +28,7 @@ Personalized Learning Recommender.
 
 ---
 
-## ✅ Tech Stack
+## Tech Stack
 
 - Python 3.10
 - Cohere LLM
@@ -40,9 +40,10 @@ Personalized Learning Recommender.
 
 ---
 
-## ✅ Installation
+## Installation
 
-### 1️⃣ Clone the Repo
+### Clone the Repo
 ```bash
 git clone https://github.com/Ameyk-byte/DES646.git
 cd DES646
+
