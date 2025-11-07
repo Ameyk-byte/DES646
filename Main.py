@@ -1,6 +1,5 @@
 import os
-import subprocess
-import eel
+import keyboard
 from asyncio import run
 from dotenv import dotenv_values
 
@@ -12,131 +11,114 @@ from Backend.Chatbot import ChatBot
 from Backend.TextToSpeech import TextToSpeech
 from Backend.IoT import iot
 from Backend.ImageGenration import GenerateImage
-from Backend.Learning import run as LearningRecommender   
+from Backend.Learning import run as LearningRecommender
 
-# Load environment variables
+# Load .env variables
 env_vars = dotenv_values(".env")
 Username = env_vars.get("Username", "User")
-Assistantname = env_vars.get("Assistantname", "Assistant")
-
-# Initialize UI
-eel.init("web")
+Assistantname = env_vars.get("Assistantname", "Neuro")
 
 def ShowTextToScreen(text):
     print(text)
-    eel.updateScreenText(text)
 
-Functions = [
-    "open", "close", "play", "system", "content",
-    "google search", "youtube search", "iot", "LearningRecommender"
-]
+Functions = ['open','close','play',"system","content",
+             "google search","youtube search","iot","LearningRecommender"]
 
 def SetAssistantStatus(status):
     print(f"Assistant Status: {status}")
-    eel.updateStatus(status)
 
 def QueryModifier(query):
     return query.strip()
 
-@eel.expose
-def MainExecution():
-    TaskExecution = False
-    ImageExecution = False
-    ImageGenerationQuery = ""
+def ProcessQuery(Query):
+    """Core logic after we receive text."""
+    ShowTextToScreen(f"{Username} : {Query}")
+    SetAssistantStatus("Processing...")
 
-    Text = SpeechRecognition()
-    print(f"Recognized Text: {Text}")
+    try:
+        Decision = FirstLayerDMM(Query)
+        print(f"Decision: {Decision}")
 
-    if Text and "neuro" in Text.lower():
-        Query = Text.lower().replace("neuro", "").strip()
-        ShowTextToScreen(f"{Username}: {Query}")
-        SetAssistantStatus("Thinking...")
+        # Learning recommender
+        for d in Decision:
+            if d.startswith("LearningRecommender"):
+                SetAssistantStatus("Preparing learning recommendations...")
+                text, payload = LearningRecommender(Query)
 
-        try:
-            Decision = FirstLayerDMM(Query)
-            print(f"Decision: {Decision}")
+                ScreenFeedback = f"{Assistantname}: {text}"
+                SpokenFeedback = "Here are personalized learning resources."
 
-            G = any(i.startswith("general") for i in Decision)
-            R = any(i.startswith("realtime") for i in Decision)
+                ShowTextToScreen(ScreenFeedback)
+                TextToSpeech(SpokenFeedback)
+                return
 
-            MergedQuery = " and ".join(
-                [" ".join(i.split()[1:]) for i in Decision if i.startswith("general") or i.startswith("realtime")]
-            )
+        # AI Image
+        for d in Decision:
+            if d.startswith("generate image"):
+                prompt = d.replace("generate image ", "")
+                GenerateImage(prompt)
+                ShowTextToScreen(f"{Assistantname}: Image generated.")
+                TextToSpeech("Image generated successfully.")
+                return
 
-            # Learning Recommender Integration
-            for d in Decision:
-                if d.startswith("LearningRecommender"):
-                    topic = d.replace("LearningRecommender", "").strip()
-                    SetAssistantStatus("Preparing learning recommendations...")
+        # IoT
+        for d in Decision:
+            if d.startswith("iot"):
+                SetAssistantStatus("Switching...")
+                cmd = d.replace("iot ", "")
+                ans = iot(cmd)
+                ShowTextToScreen(f"{Assistantname}: {ans}")
+                TextToSpeech(ans)
+                return
 
-                    text, payload = LearningRecommender(topic)
+        # Automation tasks
+        for d in Decision:
+            if any(d.startswith(func) for func in Functions) and not d.startswith("LearningRecommender"):
+                run(Automation(Decision))
+                ShowTextToScreen(f"{Assistantname}: Task executed.")
+                TextToSpeech("Task executed successfully.")
+                return
 
-                    ShowTextToScreen(f"{Assistantname}: {text}")
-                    TextToSpeech(text)
+        # Real-time search
+        if any(d.startswith("realtime") for d in Decision):
+            SetAssistantStatus("Searching...")
+            Answer = RealtimeSearchEngine(QueryModifier(Query))
+            ShowTextToScreen(f"{Assistantname}: {Answer}")
+            TextToSpeech(Answer)
+            return
 
-                    # UPDATE UI
-                    if payload and "recommendations" in payload:
-                        eel.updateLearningResources(payload["recommendations"])
+        # General chatbot
+        if any(d.startswith("general") for d in Decision):
+            SetAssistantStatus("Thinking...")
+            Answer = ChatBot(QueryModifier(Query))
+            ShowTextToScreen(f"{Assistantname}: {Answer}")
+            TextToSpeech(Answer)
+            return
 
-                    return True
+        # Exit
+        if any(d.startswith("exit") for d in Decision):
+            TextToSpeech("Goodbye!")
+            os._exit(0)
 
-            # Detect image generation
-            for d in Decision:
-                if d.startswith("generate image"):
-                    ImageGenerationQuery = d.replace("generate image ", "")
-                    ImageExecution = True
+    except Exception as e:
+        print("Error:", e)
+        ShowTextToScreen(f"{Assistantname}: Something went wrong.")
+        TextToSpeech("Something went wrong.")
 
-            # Automation tasks
-            for d in Decision:
-                if any(d.startswith(func) for func in Functions) and not d.startswith("LearningRecommender"):
-                    run(Automation(Decision))
-                    ShowTextToScreen(f"{Assistantname}: Task executed successfully.")
-                    TextToSpeech("Task executed successfully.")
-                    return True
+def VoiceCapture():
+    """Capture audio, convert to text, process query."""
+    text = SpeechRecognition()
+    if text:
+        text = text.lower()
+        if "neuro" in text:
+            Query = text.replace("neuro", "").strip()
+            ProcessQuery(Query)
+        else:
+            print("Wake word not detected, ignoring...")
 
-            # Image output
-            if ImageExecution:
-                try:
-                    GenerateImage(ImageGenerationQuery)
-                    ShowTextToScreen(f"{Assistantname}: Image generated successfully!")
-                    TextToSpeech("Image generated successfully.")
-                except:
-                    ShowTextToScreen(f"{Assistantname}: Error generating image.")
-                    TextToSpeech("Error generating image.")
-                return True
-
-            # Realtime queries
-            if R:
-                SetAssistantStatus("Searching...")
-                Answer = RealtimeSearchEngine(QueryModifier(MergedQuery))
-                ShowTextToScreen(f"{Assistantname}: {Answer}")
-                TextToSpeech(Answer)
-                return True
-
-            # General responses
-            if G:
-                Answer = ChatBot(QueryModifier(Query))
-                ShowTextToScreen(f"{Assistantname}: {Answer}")
-                TextToSpeech(Answer)
-                return True
-
-            # Exit
-            for d in Decision:
-                if d.startswith("exit"):
-                    TextToSpeech("Goodbye")
-                    os._exit(1)
-
-        except Exception as e:
-            print("ERROR:", e)
-            ShowTextToScreen(f"{Assistantname}: Something went wrong.")
-            TextToSpeech("Something went wrong.")
-
-    else:
-        print("Wake word not detected.")
-
-# start UI + speech loop
 if __name__ == "__main__":
-    eel.start("index.html", size=(1024, 768), mode="chrome", block=False)
-    while True:
-        MainExecution()
+    print("✅ Neuro is running.")
+    print("👉 Press SHIFT + SPACE to talk.")
+    keyboard.add_hotkey("shift+space", VoiceCapture)
+    keyboard.wait()   # keeps program running
 
