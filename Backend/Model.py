@@ -22,6 +22,7 @@ preamble = """
 You are a very accurate Decision-Making Model, which decides what kind of a query is given to you.
 You will decide whether a query is a 'general' query, a 'realtime' query, or is asking to perform any task or automation like 'open facebook, instagram', 'can you write a application and open it in notepad'
 *** Do not answer any query, just decide what kind of query is given to you. ***
+-> Respond with 'LearningRecommender (topic)' if a query is asking to learn, study, find tutorials, roadmaps, or educational resources such as 'recommend resources for python', 'how do I learn machine learning', 'study roadmap for bioinformatics', etc.
 -> Respond with 'general ( query )' if a query can be answered by a llm model (conversational ai chatbot) and doesn't require any up to date information like if the query is 'who was akbar?' respond with 'general who was akbar?', if the query is 'how can i study more effectively?' respond with 'general how can i study more effectively?', if the query is 'can you help me with this math problem?' respond with 'general can you help me with this math problem?', if the query is 'Thanks, i really liked it.' respond with 'general thanks, i really liked it.' , if the query is 'what is python programming language?' respond with 'general what is python programming language?', etc. Respond with 'general (query)' if a query doesn't have a proper noun or is incomplete like if the query is 'who is he?' respond with 'general who is he?', if the query is 'what's his networth?' respond with 'general what's his networth?', if the query is 'tell me more about him.' respond with 'general tell me more about him.', and so on even if it require up-to-date information to answer. Respond with 'general (query)' if the query is asking about time, day, date, month, year, etc like if the query is 'what's the time?' respond with 'general what's the time?'.
 -> Respond with 'realtime ( query )' if a query can not be answered by a llm model (because they don't have realtime data) and requires up to date information like if the query is 'who is indian prime minister' respond with 'realtime who is indian prime minister', if the query is 'tell me about facebook's recent update.' respond with 'realtime tell me about facebook's recent update.', if the query is 'tell me news about coronavirus.' respond with 'realtime tell me news about coronavirus.', etc and if the query is asking about any individual or thing like if the query is 'who is akshay kumar' respond with 'realtime who is akshay kumar', if the query is 'what is today's news?' respond with 'realtime what is today's news?', if the query is 'what is today's headline?' respond with 'realtime what is today's headline?', etc.
 -> Respond with 'open (application name or website name)' if a query is asking to open any application like 'open facebook', 'open telegram', etc. but if the query is asking to open multiple applications, respond with 'open 1st application name, open 2nd application name' and so on.
@@ -66,6 +67,12 @@ ChatHistory = [
     {"role": "Chatbot", "message": "iot thermostat set 72"},
     {"role": "User", "message": "lock the front door"},
     {"role": "Chatbot", "message": "iot door lock"},
+    {"role": "User", "message": "recommend resources for python"},
+    {"role": "Chatbot", "message": "LearningRecommender python"},
+    {"role": "User", "message": "how do I learn scanpy?"},
+    {"role": "Chatbot", "message": "LearningRecommender scanpy"},
+    {"role": "User", "message": "create a study roadmap for machine learning"},
+    {"role": "Chatbot", "message": "LearningRecommender machine learning"},
 ]
 
 def FirstLayerDMM(prompt: str = "test"):
@@ -111,3 +118,4 @@ if __name__ == "__main__":
     while True:
 
         print(FirstLayerDMM(input(">>>")))
+
