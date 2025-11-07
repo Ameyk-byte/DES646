@@ -1,0 +1,82 @@
+[
+  {
+    "id": "py101",
+    "title": "Python for Beginners – Full Course",
+    "topic": "python",
+    "type": "video",
+    "level": "beginner",
+    "duration_min": 240,
+    "tags": ["python", "programming", "basics"],
+    "url": "https://www.youtube.com/watch?v=rfscVS0vtbw"
+  },
+  {
+    "id": "py102",
+    "title": "Python Crash Course (free book)",
+    "topic": "python",
+    "type": "book",
+    "level": "beginner",
+    "duration_min": 600,
+    "tags": ["python", "book", "learning"],
+    "url": "https://automatetheboringstuff.com/"
+  },
+  {
+    "id": "ml201",
+    "title": "Machine Learning Crash Course",
+    "topic": "machine learning",
+    "type": "course",
+    "level": "beginner",
+    "duration_min": 480,
+    "tags": ["ml", "beginner", "ai"],
+    "url": "https://developers.google.com/machine-learning/crash-course"
+  },
+  {
+    "id": "ml202",
+    "title": "Andrew Ng – Machine Learning",
+    "topic": "machine learning",
+    "type": "course",
+    "level": "intermediate",
+    "duration_min": 3000,
+    "tags": ["ml", "intermediate", "stanford"],
+    "url": "https://www.coursera.org/learn/machine-learning"
+  },
+  {
+    "id": "scanpy101",
+    "title": "Scanpy: Single-Cell Analysis Tutorial",
+    "topic": "scanpy",
+    "type": "article",
+    "level": "beginner",
+    "duration_min": 60,
+    "tags": ["python", "bioinformatics", "single cell"],
+    "url": "https://scanpy.readthedocs.io/en/stable/tutorials.html"
+  },
+  {
+    "id": "bio101",
+    "title": "Introduction to Bioinformatics",
+    "topic": "bioinformatics",
+    "type": "course",
+    "level": "beginner",
+    "duration_min": 900,
+    "tags": ["biology", "bioinformatics"],
+    "url": "https://www.edx.org/course/introduction-to-bioinformatics"
+  },
+  {
+    "id": "data101",
+    "title": "Data Science for Beginners",
+    "topic": "data science",
+    "type": "video",
+    "level": "beginner",
+    "duration_min": 210,
+    "tags": ["data", "python", "statistics"],
+    "url": "https://www.youtube.com/watch?v=ua-CiDNNj30"
+  },
+  {
+    "id": "dl101",
+    "title": "Deep Learning with PyTorch",
+    "topic": "deep learning",
+    "type": "course",
+    "level": "intermediate",
+    "duration_min": 1200,
+    "tags": ["neural networks", "pytorch"],
+    "url": "https://www.udacity.com/course/deep-learning-pytorch--ud188"
+  }
+]
